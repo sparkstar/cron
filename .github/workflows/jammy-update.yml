@@ -2,10 +2,6 @@ name: mirroring from launchpad
 on:
   workflow_dispatch:
 
-permissions:
-  contents: write
-  pull-requests: write
-
 jobs:
   mirroring:
     runs-on: ubuntu-latest
@@ -24,6 +20,6 @@ jobs:
           git remote rm origin
           git remote add origin https://git.launchpad.net/~ubuntu-kernel-stable/+git/jammy
           git fetch -p
-          git remote set-url --push origin https://x-access-token:${{ secrets.TOKEN_PUSH }}@github.com/sparkstar/jammy-stable.git
+          git remote set-url --push origin https://sparkstar:{{ secrets.TOKEN_PUSH }}@github.com/sparkstar/jammy-stable.git
           git fetch -v --progress -p origin
           git push --mirror
