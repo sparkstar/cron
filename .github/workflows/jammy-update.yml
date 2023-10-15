@@ -20,6 +20,6 @@ jobs:
           git remote rm origin
           git remote add origin https://git.launchpad.net/~ubuntu-kernel-stable/+git/jammy
           git fetch -p
-          git remote set-url --push origin https://sparkstar:{{ secrets.TOKEN_PUSH }}@github.com/sparkstar/jammy-stable.git
+          git remote set-url --push origin https://sparkstar:${{ secrets.TOKEN_PUSH }}@github.com/sparkstar/jammy-stable.git
           git fetch -v --progress -p origin
           git push --mirror
