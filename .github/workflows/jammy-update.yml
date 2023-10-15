@@ -1,5 +1,8 @@
-name: mirroring from launchpad
+name: mirroring jammy from launchpad
+
 on:
+  schedule:
+    - cron: '48 */12 * * *'
   workflow_dispatch:
 
 jobs:
@@ -11,7 +14,7 @@ jobs:
           repository: sparkstar/jammy-stable
           fetch-depth: 0
           ref: stable-next
-          token: ${{ secrets.TOKEN_PUSH }}
+          token: ${{ secrets.JAMMY_STABLE_CRON_UPDATE_KERNAL_TOKEN }}
       - name: git config
         run: |
           git config --local user.name sparkstar
