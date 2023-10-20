@@ -13,7 +13,7 @@ jobs:
       - name: make build env
         uses: docker/setup-qemu-action@326560df218a7ea9cf6ab49bbc88b8b306bb437e #v3
       - name: install ubuntu package for kernel compile
-        run: sudo apt-get install -y fakeroot build-essential kexec-tools kernel-wedge gcc-arm-linux-gnueabihf gcc-arm-linux-gnueabihf libncurses5 libncurses5-dev libelf-dev asciidoc binutils-dev
+        run: sudo apt-get update && sudo apt-get install -y fakeroot build-essential kexec-tools kernel-wedge gcc-arm-linux-gnueabihf gcc-arm-linux-gnueabihf libncurses5 libncurses5-dev libelf-dev asciidoc binutils-dev
       - name: fetch kernel
         uses: actions/checkout@v4
         with:
