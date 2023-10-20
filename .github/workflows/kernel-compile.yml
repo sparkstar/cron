@@ -1,0 +1,32 @@
+name: kernel compile
+
+on:
+  workflow_dispatch:
+    inputs:
+      kernel-tags:
+        description: 'kernel tags'
+
+jobs:
+  compile:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: make build env
+        uses: docker/setup-qemu-action@326560df218a7ea9cf6ab49bbc88b8b306bb437e #v3
+      - name: install ubuntu package for kernel compile
+        run: sudo apt-get install -y fakeroot build-essential kexec-tools kernel-wedge gcc-arm-linux-gnueabihf gcc-arm-linux-gnueabihf libncurses5 libncurses5-dev libelf-dev asciidoc binutils-dev
+      - name: fetch kernel
+        uses: actions/checkout@v4
+        with:
+          repository: sparkstar/jammy-stable
+          fetch-depth: 1
+          ref: "${{ github.event.inputs.env }}"
+          token: ${{ secrets.JAMMY_STABLE_CRON_UPDATE_KERNAL_TOKEN }}
+      - name: make config
+        run: ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- make exynos_defconfig
+      - name: get kernel config from my settings
+        uses: andymckay/get-gist-action@master
+        with:
+          gistURL: https://gist.github.com/sparkstar/b9fae1a81420c8647c7fdb999d1713e1
+          file: .config
+      - name: build kernel
+        run: ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- make -j4
