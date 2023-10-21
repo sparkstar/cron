@@ -1,0 +1,31 @@
+name: uboot compile
+
+on:
+  workflow_dispatch:
+    inputs:
+      uboot-tag:
+        description: 'uboot tag'
+
+jobs:
+  compile:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: make build env
+        uses: docker/setup-qemu-action@326560df218a7ea9cf6ab49bbc88b8b306bb437e #v3
+      - name: install ubuntu package for uboot compile
+        run: sudo apt-get update && DEBIAN_FRONTEND=noninteractive sudo apt-get -y install libncurses-dev gawk flex bison openssl libssl-dev dkms libelf-dev libudev-dev libpci-dev libiberty-dev autoconf gcc-arm-linux-gnueabihf
+      - name: fetch uboot
+        uses: actions/checkout@v4
+        with:
+          repository: u-boot/u-boot
+          fetch-depth: 1
+          ref: "${{ github.event.inputs.uboot-tag }}"
+      - name: make config
+        run: ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- make odroid_defconfig
+      - name: build uboot
+        run: ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- make -j4
+      - uses: ncipollo/release-action@v1
+        with:
+          tag: "odroid-u3-uboot-${{ github.event.inputs.uboot-tag }}"
+          artifacts: "u-boot.dtb,u-boot.bin"
+

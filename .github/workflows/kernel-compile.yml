@@ -63,5 +63,5 @@ jobs:
           outPath: module.tar.gz
       - uses: ncipollo/release-action@v1
         with:
-          tag: "${{ github.event.inputs.kernel-tag }}"
+          tag: "odroid-u3-ubuntu-${{ github.event.inputs.kernel-tag }}"
           artifacts: "arch/arm/boot/zImage,header.tar.gz,module.tar.gz"
