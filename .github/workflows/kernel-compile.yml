@@ -3,8 +3,8 @@ name: kernel compile
 on:
   workflow_dispatch:
     inputs:
-      kernel-tags:
-        description: 'kernel tags'
+      kernel-tag:
+        description: 'kernel tag'
 
 jobs:
   compile:
@@ -13,20 +13,55 @@ jobs:
       - name: make build env
         uses: docker/setup-qemu-action@326560df218a7ea9cf6ab49bbc88b8b306bb437e #v3
       - name: install ubuntu package for kernel compile
-        run: sudo apt-get update && sudo apt-get install -y fakeroot build-essential kexec-tools kernel-wedge gcc-arm-linux-gnueabihf gcc-arm-linux-gnueabihf libncurses5 libncurses5-dev libelf-dev asciidoc binutils-dev
+        run: sudo apt-get update && DEBIAN_FRONTEND=noninteractive sudo apt-get install --no-install-recommends -y fakeroot build-essential kexec-tools kernel-wedge gcc-arm-linux-gnueabihf gcc-arm-linux-gnueabihf libncurses5 libncurses5-dev libelf-dev asciidoc binutils-dev qemu-user-static binfmt-support debootstrap flex bison gawk libssl-dev bc
       - name: fetch kernel
         uses: actions/checkout@v4
         with:
           repository: sparkstar/jammy-stable
           fetch-depth: 1
-          ref: "${{ github.event.inputs.env }}"
-          token: ${{ secrets.JAMMY_STABLE_CRON_UPDATE_KERNAL_TOKEN }}
+          ref: "${{ github.event.inputs.kernel-tag }}"
       - name: make config
         run: ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- make exynos_defconfig
       - name: get kernel config from my settings
+        id: gist
         uses: andymckay/get-gist-action@master
         with:
-          gistURL: https://gist.github.com/sparkstar/b9fae1a81420c8647c7fdb999d1713e1
-          file: .config
+          gistURL: https://gist.github.com/sparkstar/897f1adfb0b2be35de8ee1e9671bc040
+      - name: update config to predefined
+        run: cp -v ${{ steps.gist.outputs.file }} . # copy gisted to local
+      - name: gist output
+        run: cat .config # copy gisted to local
+      - name: add newline to gist output
+        run: sed -i -e '$a\' .config
       - name: build kernel
         run: ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- make -j4
+      - name: create result directory
+        run: mkdir -p result/header result/module
+      - name: make zImage
+        run: ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- make zImage # arch/arm/boot/zImage
+      - name: make headers
+        run: ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- make INSTALL_HDR_PATH=result/header headers_install
+      - name: make module
+        run: ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- make INSTALL_MOD_PATH=result/module modules_install
+      - name: compress header
+        uses: a7ul/tar-action@v1.1.0
+        id: compress-header
+        with:
+          command: c
+          cwd: result/header
+          files: |
+            .
+          outPath: header.tar.gz
+      - name: compress module
+        uses: a7ul/tar-action@v1.1.0
+        id: compress-module
+        with:
+          command: c
+          cwd: result/module
+          files: |
+            .
+          outPath: module.tar.gz
+      - uses: ncipollo/release-action@v1
+        with:
+          tag: "${{ github.event.inputs.kernel-tag }}"
+          artifacts: "arch/arm/boot/zImage,header.tar.gz,module.tar.gz"
