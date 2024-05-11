@@ -1,0 +1,31 @@
+name: mirroring noble from launchpad
+
+on:
+  schedule:
+    - cron: '48 */13 * * *'
+  workflow_dispatch:
+
+jobs:
+  mirroring:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: sparkstar/noble-stable
+          fetch-depth: 0
+          ref: stable-next
+          token: ${{ secrets.NOBLE_STABLE_CRON_UPDATE_KERNEL_TOKEN }}
+      - name: git config
+        run: |
+          git config --local user.name sparkstar
+          git config --local user.email sparkstar@empal.com
+      - name: add launchpad upstream
+        run: |
+          git remote add upstream https://git.launchpad.net/~ubuntu-kernel-stable/+git/noble
+      - name: fetch all data from upstream
+        run: |
+          git fetch -v --all --progress -p upstream
+      - name: push updated mirror to github
+        run: |
+          git push origin --all
+          git push origin --mirror
