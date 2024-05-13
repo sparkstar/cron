@@ -28,4 +28,5 @@ jobs:
       - name: push updated mirror to github
         run: |
           git push origin --all
+          git push origin --tags
           git push origin --mirror
