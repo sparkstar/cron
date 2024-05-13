@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  mirroring:
+  mirroring-jammy:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -19,10 +19,13 @@ jobs:
         run: |
           git config --local user.name sparkstar
           git config --local user.email sparkstar@empal.com
+      - name: add launchpad upstream
+        run: |
+          git remote add upstream https://git.launchpad.net/~ubuntu-kernel-stable/+git/jammy
+      - name: fetch all data from upstream
+        run: |
+          git fetch -v --progress -p upstream
       - name: push updated mirror to github
         run: |
-          git remote rm origin
-          git remote add origin https://git.launchpad.net/~ubuntu-kernel-stable/+git/jammy
-          git fetch -v --progress -p origin
-          git remote set-url --push origin https://github.com/sparkstar/jammy-stable.git
-          git push --mirror
+          git push origin --all
+          git push origin --mirror
