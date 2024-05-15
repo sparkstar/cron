@@ -2,7 +2,7 @@ name: mirroring noble from launchpad
 
 on:
   schedule:
-    - cron: '48 */13 * * *'
+    - cron: '48 1,7,13,19 * * *'
   workflow_dispatch:
 
 jobs:
@@ -13,20 +13,25 @@ jobs:
         with:
           repository: sparkstar/noble-stable
           fetch-depth: 0
+          show-progress: true
           ref: stable-next
           token: ${{ secrets.NOBLE_STABLE_CRON_UPDATE_KERNEL_TOKEN }}
       - name: git config
         run: |
           git config --local user.name sparkstar
           git config --local user.email sparkstar@empal.com
-      - name: add launchpad upstream
+      - name: remove origin and add launchpad git as origin
         run: |
-          git remote add upstream https://git.launchpad.net/~ubuntu-kernel-stable/+git/noble
-      - name: fetch all data from upstream
+          URL_PUSH=$(git remote get-url origin)
+          git remote remove origin
+          git remote add origin https://git.launchpad.net/~ubuntu-kernel-stable/+git/noble
+          git remote set-url --push origin $URL_PUSH
+      - name: fetch all data with tags from fetch-origin to local
         run: |
-          git fetch -v --progress -p upstream
-      - name: push updated mirror to github
+          # fetch all from fetch-origin(launchpad)
+          git fetch --all --verbose --force
+          # HEAD from origin
+          git reset --hard origin/stable-next
+      - name: push latest local to push-origin(github)
         run: |
-          git push origin --all
-          git push origin --tags
           git push origin --mirror
